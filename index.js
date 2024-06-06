@@ -25,6 +25,40 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    // create a database and collection
+    const coffeesCollection = client.db("coffeesDB").collection("coffees");
+
+    // create a item
+    app.post("/coffees", async (req, res) => {
+      try {
+        const data = req.body;
+        const result = await coffeesCollection.insertOne(data);
+        if (result.acknowledged && result.insertedId) {
+          return res
+            .status(201)
+            .json({ message: "Item created", id: result.insertedId });
+        }
+      } catch (err) {
+        res
+          .status(500)
+          .json({ message: "Item has not been created", error: err.message });
+      }
+    });
+
+    // get all items
+    app.get('/coffees', async(req, res)=>{
+        try{
+            const cursor = await coffeesCollection.find();
+            const items = await cursor.toArray();
+            console.log(items);
+            res.status(200).json(items);
+
+
+        }catch(err){
+            res.status(500).json({message: 'Not Found', error: err.message})
+        }
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
