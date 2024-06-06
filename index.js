@@ -57,6 +57,41 @@ async function run() {
       }
     });
 
+    // retrieve a item by id
+    app.get("/coffees/:id", async (req, res) => {
+      try {
+        const query = { _id: new ObjectId(req.params.id) };
+        const result = await coffeesCollection.findOne(query);
+        if (result) {
+          res.status(200).json(result);
+        } else {
+          res.status(404).json({ message: "Item not found" });
+        }
+      } catch (err) {
+        res.status(500).json({message: 'Failed to retrieve item', error: err.message})
+      }
+    });
+
+    // update a item 
+    app.put('/coffees/:id', async(req, res)=>{
+        try{
+            const filter = {_id: new ObjectId(req.params.id)}
+            const options = {upsert: true}
+            const updatedItem = {
+                $set:{
+                    ...req.body
+                }
+            }
+
+            const result = await coffeesCollection.updateOne(filter, updatedItem, options);
+            console.log(result);
+            res.status(200).json(result)
+
+        }catch(err){
+            res.status(500).json({message: 'Failed to update', error: err.message})
+        }
+    })
+
     // delete a item by id
     app.delete("/coffees/:id", async (req, res) => {
       try {
@@ -64,8 +99,8 @@ async function run() {
         const result = await coffeesCollection.deleteOne(query);
         if (result.deletedCount === 1) {
           res.status(200).json({ message: "Item deleted", result: result });
-        }else{
-            res.status(404).json({message: 'Item not found'});
+        } else {
+          res.status(404).json({ message: "Item not found" });
         }
       } catch (err) {
         res
