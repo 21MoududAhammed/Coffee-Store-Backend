@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -46,18 +46,33 @@ async function run() {
     });
 
     // get all items
-    app.get('/coffees', async(req, res)=>{
-        try{
-            const cursor = await coffeesCollection.find();
-            const items = await cursor.toArray();
-            console.log(items);
-            res.status(200).json(items);
+    app.get("/coffees", async (req, res) => {
+      try {
+        const cursor = await coffeesCollection.find();
+        const items = await cursor.toArray();
+        console.log(items);
+        res.status(200).json(items);
+      } catch (err) {
+        res.status(500).json({ message: "Not Found", error: err.message });
+      }
+    });
 
-
-        }catch(err){
-            res.status(500).json({message: 'Not Found', error: err.message})
+    // delete a item by id
+    app.delete("/coffees/:id", async (req, res) => {
+      try {
+        const query = { _id: new ObjectId(req.params.id) };
+        const result = await coffeesCollection.deleteOne(query);
+        if (result.deletedCount === 1) {
+          res.status(200).json({ message: "Item deleted", result: result });
+        }else{
+            res.status(404).json({message: 'Item not found'});
         }
-    })
+      } catch (err) {
+        res
+          .status(500)
+          .json({ message: "Item has not been deleted", error: err.message });
+      }
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
